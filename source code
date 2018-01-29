@@ -1,0 +1,85 @@
+#importing dataset
+
+x<-read.csv("F:/Desktop/education/Myprojects/SRMHealth/project-survey/SRM1.csv",header=TRUE,na.strings =" ")
+
+# modifying disease1
+
+x$disease1<-tolower(x$disease1)
+x$disease1[x$disease1=="other(please specify below)"]<-NA
+x$disease1[x$disease1=="other(please specify below)"]<-NA
+#modifying day
+
+require(lubridate)
+x$date<-strptime(as.character(x$date),"%m/%d/%Y")
+x$date<-format(x$date,"%Y/%m/%d")
+month(x$date)
+year(x$date)
+day(x$date)
+
+#modifying hospital
+
+library(stringr)
+x$hospital<-tolower(x$hospital)
+x$hospital[is.na(x$hospital)]<-"uvw"
+x$hospital[x$hospital=="na"]<-"uvw"
+value1<-str_detect(x$hospital,"hospital")
+value2<-str_detect(x$hospital,"clinic")
+for(i in 1:length(x$hospital)){
+  if(value1[i]!=TRUE & value2[i]!=TRUE){
+    x$hospital[i]<-0
+  }
+}
+
+#modifying doctor
+
+library(stringr)
+x$Doctor<-tolower(x$Doctor)
+x$Doctor[is.na(x$Doctor)]<-"uvw"
+x$Doctor[x$Doctor=="na"]<-"uvw"
+value1<-str_detect(x$Doctor,"dr.")
+#value2<-str_detect(x$Doctor,"clinic")
+for(i in 1:length(x$Doctor)){
+  if(value1[i]!=TRUE){
+    x$Doctor[i]<-0
+  }
+}
+
+# ********** OUTPUT DELIVERY **************** ##
+
+# counting frequencies of disease
+
+install.packages('plyr')
+library(plyr)
+#count(x,"disease1")
+subsetting<-subset(x$disease1,x$disease1!='NA')
+table(subsetting)
+sorted<-sort(table(subsetting))
+top5<-head(sorted)
+pie(top5)
+
+#getting factors and count as dataframe
+install.packages("lattice")
+library(lattice)
+table<-table(subsetting)
+ratings<-as.data.frame(table)
+names(ratings[1])<-"Rating"
+names(ratings[2])<-"Count"
+barchart(
+  x=subsetting~Freq,
+  data=ratings,
+  main="Count of diseases",
+  ylab="Rating",
+  xlab="disease")
+
+#displaying top 5 disease using piechart
+pie(top5,main = "Top 5 diseases",col = rainbow(length(top5)))
+
+#Calculating percentage of diseases
+ratings$perct<-round(ratings$Freq/sum(ratings$Freq)*100)
+barchart(
+  x=subsetting~perct,
+  data=ratings,
+  main="2017 SRM Disease status",
+  ylab="Disease",
+  xlab="Student Percentage Suffered",
+  col=ifelse(ratings$perct>5,"red","green"))
